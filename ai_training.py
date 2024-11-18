@@ -97,3 +97,75 @@ def create_model(input_shape=(512, 512, 3), num_classes=10):
     )
     
     return model
+
+
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+import matplotlib.pyplot as plt
+
+def train_model(model, train_data, val_data, save_path='model.h5', epochs=20):
+    """
+    Запуск процесса обучения модели с сохранением лучшей версии.
+    :param model: Скомпилированная модель.
+    :param train_data: Данные для обучения.
+    :param val_data: Данные для проверки.
+    :param save_path: Путь для сохранения модели.
+    :param epochs: Количество эпох.
+    :return: История обучения.
+    """
+    # Настраиваем коллбеки
+    callbacks = [
+        ModelCheckpoint(save_path, save_best_only=True, monitor='val_loss', verbose=1),  # Сохранение лучшей модели
+        EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True, verbose=1)  # Остановка при переобучении
+    ]
+
+    # Обучение
+    history = model.fit(
+        train_data,
+        validation_data=val_data,
+        epochs=epochs,
+        steps_per_epoch=len(train_data),
+        validation_steps=len(val_data),
+        callbacks=callbacks
+    )
+    
+    return history
+
+# Вызов функции
+history = train_model(
+    model=model, 
+    train_data=train_data, 
+    val_data=val_data,  
+    save_path='ants_classifier.h5',  
+    epochs=20  
+)
+def plot_training_history(history):
+    """
+    Отрисовка графиков обучения и проверки.
+    
+    :param history: История обучения модели.
+    """
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    epochs = range(1, len(acc) + 1)
+
+    # График точности
+    plt.figure(figsize=(12, 5))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, acc, label='Точность на обучении')
+    plt.plot(epochs, val_acc, label='Точность на проверке')
+    plt.title('Точность обучения')
+    plt.legend()
+
+    # График потерь
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, loss, label='Потери на обучении')
+    plt.plot(epochs, val_loss, label='Потери на проверке')
+    plt.title('Потери обучения')
+    plt.legend()
+
+    plt.show()
+
+# Вызов функции
+plot_training_history(history)
