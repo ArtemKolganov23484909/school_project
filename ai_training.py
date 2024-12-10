@@ -169,3 +169,28 @@ def plot_training_history(history):
 
 # Вызов функции
 plot_training_history(history)
+def train_model():
+    """
+    Загружает данные, создаёт модель и обучает её.
+    """
+    train_data, val_data = load_data()
+    model = create_model()
+    
+    # Устанавливаем раннюю остановку и сохранение модели
+    callbacks = [
+        EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True),
+        ModelCheckpoint('best_model.h5', monitor='val_loss', save_best_only=True)
+    ]
+    
+    # Обучение
+    history = model.fit(
+        train_data,
+        validation_data=val_data,
+        epochs=20,
+        callbacks=callbacks
+    )
+    
+    # Сохранение модели
+    model.save('final_model.h5')
+    print("Модель сохранена в файлы: final_model.h5 и best_model.h5")
+
